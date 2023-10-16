@@ -1,0 +1,70 @@
+clear, clc
+tic
+syms px py pz az ax ay
+syms q1 q2 q3 
+
+L1 = 13.5
+L2 = 15
+L3 = 20
+
+DHParam = [q1 L1 0 pi/2; (pi/2+q2) 0 L2 0; q3 0 L3 0];
+
+[A, T, Q, Rot, Tra] = DH(DHParam, px, py, pz, az);
+
+%assume(q1>-pi & q1<pi & q2>-pi & q2<pi & q3>-pi & q3<pi)
+assume(pz>0 & q1<0 & q1 > -pi)% & q2>0 & q3>0)
+
+    EqX = px == simplify(Tra(1));
+    EqY = py == simplify(Tra(2));
+    EqZ = pz == simplify(Tra(3));
+    
+    jointVar = symvar(T);
+    
+
+    %%%%%%%%%%55
+
+% A es el arreglo conteniendo las matrices de transformación de i = 1 a i =
+% n. T es la matriz de transformación simplificada, la matriz de cinemática
+% directa. Q es un vector conteniendo los resultados para las variables de
+% q1 a qn. Rot es la matriz de rotación extraída de T. Y Tra es el ventor
+% posición extraído de T. 
+
+% syms n_x s_x a_x p_x n_y s_y a_y p_y n_z s_z a_z p_z
+% T_syms = [n_x s_x a_x p_x;n_y s_y a_y p_y;n_z s_z a_z p_z;0 0 0 1];
+% 
+% T1 = (A(:,:,1))\T_syms == A(:,:,2)*A(:,:,3)
+
+
+    ia = inv(A(:, :, 1));
+    ter2 = A(:, :, 2) * A(:, :, 3);
+    eq1 = ter2(3,4) == ia (3,1)*px + ia(3,2) *py;
+    %q1 = solve(eq1,q1, 'real',true);
+    
+    ib = inv(A(:, :, 2))*ia;
+    ter1 = A(:, :, 3);
+    
+    eq2 = ter1(2,4) == ib(2,1)*px + ib(2,2)*py + ib(2,3)*pz + ib(2,4)*1;
+    eq3 = ter1(1,4) == ib(1,1)*px + ib(1,2)*py + ib(1,3)*pz + ib(1,4)*1;
+    
+    %assume(q2>0 & q3>0)
+    [q2,q3] = solve([eq2,eq3],[q2 q3], 'real', true);
+    
+    q1 = atan2(-py,-px); %ajustado a mano para dar órdenes de valores negativos
+    
+    q2a = eval(q2(1));
+    q3a = eval(q3(1));
+    
+    q2b = eval(q2(2));
+    q3b = eval(q3(2));
+    
+    toc
+    
+%     th = [q1,q2,q3];
+%     th2 = rad2deg(th);
+% 
+%     th2(1);
+%     th2(2);
+%     th2(3);
+
+
+% fun = @(q) norm([Tra(1);Tra(2);Tra(3)]);
